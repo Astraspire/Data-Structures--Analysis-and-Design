@@ -1,0 +1,447 @@
+ABCU - Binary Search Tree Implementation Pseudocode
+Pseudocode for CS300 Milestone One - Danny Fetter
+
+DATA:
+  COURSE is a record with:
+    courseId (text)
+    name (text)
+    coursePrerequisites (list of text)
+
+  NODE is a record with:
+    course (COURSE)
+    left (NODE or null)
+    right (NODE or null)
+
+  PENDING PREREQUISITE is a record with:
+    courseId (text)
+    missingPrereqId (text)
+    
+  BINARY SEARCH TREE is a structure with:
+    root (NODE or null)
+    size (number)
+  
+  VARIABLES are:
+    courseCatalog is a Binary Search Tree of COURSE
+    pendingPrerequisites is a list of PENDING PREREQUISITE
+
+  GLOBAL CONSTANTS are:
+    INPUT_FILE is the text "ABCU-CourseData.txt"
+
+CONSTRUCTORS:
+  DEFAULT CONSTRUCTOR BinarySearchTree()
+
+    set size to 0
+    set root to null
+
+  END CONSTRUCTOR
+
+  DESTRUCTOR ~BinarySearchTree()
+
+    WHILE root is not null
+      call PostOrderDelete(root)
+    END WHILE
+
+    CALL SetBstSize(courseCatalog, 0)
+  END DESTRUCTOR
+
+FUNCTIONS:
+
+  FUNCTION DisplayCourse(course)
+    IF course.courseId is empty text
+      DISPLAY "No course data to display."
+      RETURN
+    END IF
+
+    DISPLAY course.courseId and ": " and course.name
+    IF the size of course.coursePrerequisites is greater than 0
+      DISPLAY "  Prerequisites: "
+      FOR EACH prereqId in course.coursePrerequisites
+        DISPLAY new line and prereqId
+      END FOR
+    END IF
+  END FUNCTION
+
+  FUNCTION SetBstSize(tree, newSize)
+
+    set tree.size to newSize
+
+  END FUNCTION
+
+  FUNCTION GetBstSize(tree)
+
+    RETURN tree.size
+
+  END FUNCTION    
+
+  FUNCTION LTrimString(s)
+    WHILE the first character of s is a space character
+      remove the first character from s
+    END WHILE
+    RETURN s
+  END FUNCTION
+
+  FUNCTION RTrimString(s)
+    WHILE the last character of s is a space character
+      remove the last character from s
+    END WHILE
+    RETURN s
+  END FUNCTION
+
+  FUNCTION TrimString(s)
+    set s to RTrimString(s)
+    set s to LTrimString(s)
+    RETURN s
+  END FUNCTION
+
+  FUNCTION AddNode(node, course)
+
+    IF course.courseId is less than node.course.courseId
+
+      IF node.left is null
+        CREATE a new NODE named newNode
+        set newNode.course to course
+        set newNode.left to null
+        set newNode.right to null
+        set node.left to newNode
+        CALL SetBstSize(courseCatalog, GetBstSize(courseCatalog) + 1)
+      ELSE
+        call AddNode(node.left, course)
+      END IF
+    ELSE
+
+      IF node.right is null
+        CREATE a new NODE named newNode
+        set newNode.course to course
+        set newNode.left to null
+        set newNode.right to null
+        set node.right to newNode
+        CALL SetBstSize(courseCatalog, GetBstSize(courseCatalog) + 1)
+      ELSE
+        call AddNode(node.right, course)
+      END IF
+
+    END IF
+
+  END FUNCTION
+
+  FUNCTION RemoveNode(node, courseId)
+
+    IF node is null
+      RETURN node
+    ELSE IF courseId is less than node.course.courseId
+      set node.left to RemoveNode(node.left, courseId)
+    END IF
+
+    IF courseId equals node.course.courseId
+
+      IF node.left is null AND node.right is null
+        delete node
+        CALL SetBstSize(courseCatalog, GetBstSize(courseCatalog) - 1)
+        RETURN null
+
+      ELSE IF node.left is not null AND node.right is null
+        set temp to node.left
+        delete node
+        CALL SetBstSize(courseCatalog, GetBstSize(courseCatalog) - 1)
+        RETURN temp
+
+      ELSE IF node.left is null AND node.right is not null
+        set temp to node.right
+        delete node
+        CALL SetBstSize(courseCatalog, GetBstSize(courseCatalog) - 1)
+        RETURN temp
+
+      ELSE
+        set temp to node.right
+        WHILE temp.left is not null
+          set temp to temp.left
+        END WHILE
+        set node.course to temp.course
+        set node.right to RemoveNode(node.right, temp.course.courseId)
+        RETURN node
+
+      END IF
+
+    ELSE IF courseId is greater than node.course.courseId
+      set node.right to RemoveNode(node.right, courseId)
+      RETURN node
+    END IF
+
+    RETURN node
+
+  END FUNCTION
+
+  FUNCTION InOrderPrint(node)
+
+    IF node is not null
+      call InOrderPrint(node.left)
+      CALL DisplayCourse(node.course)
+      call InOrderPrint(node.right)
+    END IF
+
+  END FUNCTION
+
+  FUNCTION PostOrderDelete(node)
+
+    IF node is not null
+      call PostOrderDelete(node.left)
+      call PostOrderDelete(node.right)
+      CALL RemoveNode(node, node.course.courseId)
+    END IF
+
+  END FUNCTION
+
+  FUNCTION PreOrderValidation(node)
+
+    IF node is not null
+      IF pendingPrerequisites is not empty
+        FOR EACH pendingPrerequisite in pendingPrerequisites
+          searchOutput is a COURSE
+          set searchOutput to output of Search(courseCatalog, pendingPrerequisite.missingPrereqId)
+          IF searchOutput is empty
+            DISPLAY "Validation Error: Course " and node.course.courseId and " has missing prerequisite " and pendingPrerequisite.missingPrereqId
+          ELSE
+            set courseToUpdate to pendingPrerequisite.courseId
+            add pendingPrerequisite.missingPrereqId to searchOutput.coursePrerequisites
+            Remove(courseCatalog, courseToUpdate)
+            Insert(courseCatalog, searchOutput)
+            delete pendingPrerequisite from pendingPrerequisites
+          END IF
+        END FOR
+      END IF
+      call PreOrderValidation(node.left)
+      call PreOrderValidation(node.right)
+    END IF
+
+  END FUNCTION
+
+  FUNCTION ReadFile(fileName, courseCatalog)
+    DISPLAY "Opening file " and fileName
+    open file with name fileName for reading
+    IF the file is not open
+      DISPLAY "Could not open file"
+      RETURN 1
+    END IF
+
+    DISPLAY "File open. Reading and storing data..."
+
+    SET rawInput to empty text
+
+    TRY
+      WHILE there is another line to read from the file
+        read the next line into rawInput
+
+        SET current to empty text
+        SET field to 0 
+        * field indicators explaination:
+        * 0 is for the courseId, 
+        * 1 is for the name, 
+        * 2+ are for prerequisites
+        *
+        CREATE a new COURSE named newCourse
+
+        FOR EACH character ch in rawInput
+          IF ch is a comma
+            set current to TrimString(current)
+            IF field equals 0
+              set newCourse.courseId to current
+            ELSE IF field equals 1
+              set newCourse.name to current
+            ELSE IF field is greater than 1
+              searchOutput is a COURSE
+              set searchOutput to output of Search(courseCatalog, current)
+              IF searchOutput is not empty
+                add current to newCourse.coursePrerequisites
+              ELSE
+                CREATE a new PENDING PREREQUISITE named pendingPrereq
+                set pendingPrereq.courseId to newCourse.courseId
+                set pendingPrereq.missingPrereqId to current
+                add pendingPrereq to pendingPrerequisites
+              END IF
+            set current to empty text
+            increase field by 1
+          ELSE
+            add ch to the end of current
+          END IF
+        END FOR
+
+        IF the length of current is at least 1
+          set current to TrimString(current)
+          IF field equals 1
+            set newCourse.name to current
+          ELSE IF field is greater than 1
+            searchOutput is a COURSE
+            set searchOutput to output of Search(courseCatalog, current)
+            IF searchOutput is not empty
+              add current to newCourse.coursePrerequisites
+            ELSE
+              CREATE a new PENDING PREREQUISITE named pendingPrereq
+              set pendingPrereq.courseId to newCourse.courseId
+              set pendingPrereq.missingPrereqId to current
+              add pendingPrereq to pendingPrerequisites
+            END IF
+          END IF
+          set current to empty text
+          increase field by 1
+        END IF
+
+        Insert(courseCatalog, newCourse)
+      END WHILE
+
+      IF the file did not finish at the end marker
+        DISPLAY "Input failure before reaching end of file."
+      END IF
+
+      * final validation pass to ensure all prerequisites are met *
+      call PreOrderValidation(courseCatalog)
+      DISPLAY the size of courseCatalog and " courses were added successfully!"
+      DISPLAY "Closing file: " and fileName
+
+      close the file
+
+      DISPLAY "File: " and fileName
+      DISPLAY "Import complete."
+
+      RETURN 0
+    CATCH exception
+      DISPLAY "Error reading file ", csvPath
+    END TRY
+  END FUNCTION
+
+  FUNCTION InOrderPrintAll(tree)
+
+    call InOrderPrint(tree.root)
+
+  END FUNCTION
+
+  FUNCTION PostOrderDeleteAll(tree)
+
+    call PostOrderDelete(tree.root)
+
+  END FUNCTION
+
+  FUNCTION PreOrderValidationAll(tree)
+
+    call PreOrderValidation(tree.root)
+
+  END FUNCTION
+
+  FUNCTION Insert(tree, course)
+
+    CREATE a new NODE named newNode
+    set newNode.course to course
+    set newNode.left to null
+    set newNode.right to null
+
+    IF tree.root is null
+      set tree.root to newNode
+      CALL SetBstSize(courseCatalog, GetBstSize(courseCatalog) + 1)
+      RETURN
+    END IF
+
+    call AddNode(tree.root, course)
+
+  END FUNCTION
+
+  FUNCTION Remove(tree, courseId)
+
+    set tree.root to RemoveNode(tree.root, courseId)
+
+    IF tree.root is null
+      RETURN
+    END IF
+
+  END FUNCTION
+
+  FUNCTION Search(tree, courseId)
+
+    set currentNode to tree.root
+
+    WHILE currentNode is not null
+
+      IF currentNode.course.courseId equals courseId
+        RETURN currentNode.course
+      ELSE IF courseId is less than currentNode.course.courseId
+        set currentNode to currentNode.left
+      ELSE
+        set currentNode to currentNode.right
+      END IF
+
+    END WHILE
+
+    CREATE an empty course named course
+    RETURN course
+
+  END FUNCTION
+
+  FUNCTION MainMenu()
+    SET choice to 0
+
+    DISPLAY "Press Enter to open the menu..."
+    wait for the user to press Enter
+
+    DO
+      DISPLAY "MAIN MENU"
+      DISPLAY "'1' to read the file."
+      DISPLAY "'2' to print the entire course catalog."
+      DISPLAY "'3' to search for and print a specific course."
+      DISPLAY "'4' to search for and remove a specific course."
+      DISPLAY "'0' to exit."
+      DISPLAY "User choice: "
+      read choice
+      clear any leftover input from that number entry
+
+      IF choice equals 1
+        call ReadFile(INPUT_FILE, courseCatalog)
+
+      ELSE IF choice equals 2
+        IF the size of courseCatalog is less than 1
+          DISPLAY "No courses currently in the catalog"
+        ELSE
+          call InOrderPrint(courseCatalog)
+        END IF
+
+      ELSE IF choice equals 3
+        IF the size of courseCatalog is less than 1
+          DISPLAY "No courses currently in the catalog"
+        ELSE
+          SET searchTerm to empty text
+          DISPLAY "Search by course name or ID: "
+          read a full line into searchTerm
+          CREATE a new COURSE named searchResult
+          set searchResult to output of Search(courseCatalog, searchTerm)
+          IF searchResult.courseId is empty text
+            DISPLAY "No results found for: " and searchTerm
+          ELSE
+            CALL DisplayCourse(searchResult)
+          END IF
+        END IF
+      ELSE IF choice equals 4
+        IF the size of courseCatalog is less than 1
+          DISPLAY "No courses currently in the catalog"
+        ELSE
+          SET removeTerm to empty text
+          DISPLAY "Remove by course name or ID: "
+          read a full line into removeTerm
+          CREATE a new COURSE named removeResult
+          set removeResult to output of Search(courseCatalog, removeTerm)
+          IF removeResult.courseId is empty text
+            DISPLAY "No results found for: " and removeTerm
+          ELSE
+            CALL Remove(courseCatalog, removeResult.courseId)
+            DISPLAY "Course " and removeTerm and " removed."
+          END IF
+        END IF
+      ELSE IF choice equals 0
+        DISPLAY "exiting..."
+      ELSE
+        DISPLAY "Invalid entry!"
+      END IF
+
+    WHILE choice is not equal to 0
+
+  END FUNCTION
+
+MAIN PROGRAM
+  call MainMenu()
+  END PROGRAM
