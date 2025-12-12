@@ -11,7 +11,6 @@ DATA:
     courseId (text)
     missingPrereqId (text)
 
-
   VARIABLES are:
     pendingPrerequisites is a list of PENDING PREREQUISITE
     newCourse is a COURSE
@@ -27,8 +26,7 @@ DATA:
     returnedIndexValue is a number and starts at -2
 
   GLOBAL CONSTANTS:
-  INPUT_FILE is the text "ABCU-CourseData.txt"
-
+    INPUT_FILE is the text "ABCU-CourseData.txt"
 
 FUNCTIONS:
   FUNCTION ltrim(s)
@@ -59,16 +57,20 @@ FUNCTIONS:
 
   FUNCTION AddCourseToCatalog(courseCatalog, newCourse)
     i is a number set to 0
-    tempCourse is a COURSE
 
-    FOR i from 0 to the size of courseCatalog minus 1
-      IF newCourse.courseId is less than courseCatalog[i].courseId
-        insert newCourse into courseCatalog at index i
-        RETURN
-      END IF
-    END FOR
+    WHILE i < size of courseVector AND newCourse.courseId > courseVector[i].courseId
+        increase i by 1
+    END WHILE
 
-    add newCourse to the end of courseCatalog
+    set courseVector size to size + 1
+    j is a number set to size of courseVector minus 1
+
+    WHILE j > i
+        set courseVector[j] to courseVector[j - 1]
+        decrease j by 1
+    END WHILE
+
+    set courseVector[i] to newCourse
   END FUNCTION
 
   FUNCTION PrerequisiteValidation(courseCatalog)
@@ -322,5 +324,3 @@ FUNCTIONS:
 MAIN PROGRAM
   call MainMenu()
   END PROGRAM
-
-
