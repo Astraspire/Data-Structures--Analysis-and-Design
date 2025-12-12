@@ -215,6 +215,72 @@ FUNCTIONS:
 
   END FUNCTION
 
+  FUNCTION InOrderPrintAll(tree)
+
+    call InOrderPrint(tree.root)
+
+  END FUNCTION
+
+  FUNCTION PostOrderDeleteAll(tree)
+
+    call PostOrderDelete(tree.root)
+
+  END FUNCTION
+
+  FUNCTION PreOrderValidationAll(tree)
+
+    call PreOrderValidation(tree.root)
+
+  END FUNCTION
+
+  FUNCTION Insert(tree, course)
+
+    CREATE a new NODE named newNode
+    set newNode.course to course
+    set newNode.left to null
+    set newNode.right to null
+
+    IF tree.root is null
+      set tree.root to newNode
+      CALL SetBstSize(courseCatalog, GetBstSize(courseCatalog) + 1)
+      RETURN
+    END IF
+
+    call AddNode(tree.root, course)
+
+  END FUNCTION
+
+  FUNCTION Remove(tree, courseId)
+
+    set tree.root to RemoveNode(tree.root, courseId)
+
+    IF tree.root is null
+      RETURN
+    END IF
+
+  END FUNCTION
+
+  FUNCTION Search(tree, courseId)
+
+    set currentNode to tree.root
+
+    WHILE currentNode is not null
+
+      IF currentNode.course.courseId equals courseId
+        RETURN currentNode.course
+      ELSE IF courseId is less than currentNode.course.courseId
+        set currentNode to currentNode.left
+      ELSE
+        set currentNode to currentNode.right
+      END IF
+
+    END WHILE
+
+    CREATE an empty course named course
+    RETURN course
+
+  END FUNCTION
+
   FUNCTION ReadFile(fileName, courseCatalog)
     DISPLAY "Opening file " and fileName
     open file with name fileName for reading
@@ -306,72 +372,6 @@ FUNCTIONS:
     CATCH exception
       DISPLAY "Error reading file ", csvPath
     END TRY
-  END FUNCTION
-
-  FUNCTION InOrderPrintAll(tree)
-
-    call InOrderPrint(tree.root)
-
-  END FUNCTION
-
-  FUNCTION PostOrderDeleteAll(tree)
-
-    call PostOrderDelete(tree.root)
-
-  END FUNCTION
-
-  FUNCTION PreOrderValidationAll(tree)
-
-    call PreOrderValidation(tree.root)
-
-  END FUNCTION
-
-  FUNCTION Insert(tree, course)
-
-    CREATE a new NODE named newNode
-    set newNode.course to course
-    set newNode.left to null
-    set newNode.right to null
-
-    IF tree.root is null
-      set tree.root to newNode
-      CALL SetBstSize(courseCatalog, GetBstSize(courseCatalog) + 1)
-      RETURN
-    END IF
-
-    call AddNode(tree.root, course)
-
-  END FUNCTION
-
-  FUNCTION Remove(tree, courseId)
-
-    set tree.root to RemoveNode(tree.root, courseId)
-
-    IF tree.root is null
-      RETURN
-    END IF
-
-  END FUNCTION
-
-  FUNCTION Search(tree, courseId)
-
-    set currentNode to tree.root
-
-    WHILE currentNode is not null
-
-      IF currentNode.course.courseId equals courseId
-        RETURN currentNode.course
-      ELSE IF courseId is less than currentNode.course.courseId
-        set currentNode to currentNode.left
-      ELSE
-        set currentNode to currentNode.right
-      END IF
-
-    END WHILE
-
-    CREATE an empty course named course
-    RETURN course
-
   END FUNCTION
 
   FUNCTION MainMenu()
