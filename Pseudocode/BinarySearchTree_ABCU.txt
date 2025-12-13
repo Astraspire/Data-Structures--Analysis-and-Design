@@ -25,7 +25,7 @@ DATA:
     pendingPrerequisites is a list of PENDING PREREQUISITE
 
   GLOBAL CONSTANTS are:
-    INPUT_FILE is the text "ABCU-CourseData.txt"
+    INPUT_FILE is the text "CS 300 ABCU_Advising_Program_Input.csv"
 
 CONSTRUCTORS:
   DEFAULT CONSTRUCTOR BinarySearchTree()
