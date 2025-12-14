@@ -7,15 +7,16 @@
 #include <string>
 #include <vector>
 #include <limits>
+using namespace std;
 
 struct COURSE {
-    std::string courseId;
-    std::string courseName;
-    std::vector<std::string> coursePrerequisites;
+    string courseId;
+    string courseName;
+    vector<string> coursePrerequisites;
 };
 struct PENDING_PREREQUISITE {
-    std::string courseId;
-    std::string missingPrereqId;
+    string courseId;
+    string missingPrereqId;
 };
 struct NODE {
     COURSE course;
@@ -25,16 +26,16 @@ struct NODE {
 
 // FUNCTION PROTOTYPES are:
 void DisplayCourse(const COURSE& course);
-std::string LTrimString(const std::string& s);
-std::string RTrimString(const std::string& s);
-std::string TrimString(const std::string& s);
+string LTrimString(const string& s);
+string RTrimString(const string& s);
+string TrimString(const string& s);
 void MainMenu();
 
 // GLOBAL VARIABLES are:
-std::vector<PENDING_PREREQUISITE> pendingPrerequisites; 
+vector<PENDING_PREREQUISITE> pendingPrerequisites; 
 
 // GLOBAL CONSTANTS are:
-const std::string INPUT_FILE = "CS 300 ABCU_Advising_Program_Input.csv";
+const string INPUT_FILE = "CS 300 ABCU_Advising_Program_Input.csv";
 
 class BinarySearchTree {
     private:
@@ -67,7 +68,7 @@ class BinarySearchTree {
             }
         }
 
-        void RemoveNode(NODE* node, const std::string& courseId) {
+        void RemoveNode(NODE* node, const string& courseId) {
             if (node == nullptr) {
                 return;
             }
@@ -101,7 +102,7 @@ class BinarySearchTree {
             }
         }
     
-        COURSE SearchNode(NODE* node, const std::string& courseId) {
+        COURSE SearchNode(NODE* node, const string& courseId) {
             // if course not found, return
             if (node == nullptr) return COURSE();
 
@@ -169,11 +170,11 @@ class BinarySearchTree {
             }
         }
 
-        void Remove(const std::string& courseId) {
+        void Remove(const string& courseId) {
             RemoveNode(root, courseId);
         }
 
-        COURSE Search(const std::string& courseId) {
+        COURSE Search(const string& courseId) {
             return SearchNode(root, courseId);
         }
         
@@ -196,67 +197,95 @@ class BinarySearchTree {
 }; 
 
 void DisplayCourse(const COURSE& course) {
-    std::cout << "Course ID: " << course.courseId << std::endl;
-    std::cout << "Course Name: " << course.courseName << std::endl;
-    std::cout << "Course Prerequisites: ";
-    for (const auto& prereq : course.coursePrerequisites) {
-        std::cout << prereq << " ";
+    cout << "------------------------" << endl;
+    cout << "Course ID: " << course.courseId << endl;
+    cout << "Course Name: " << course.courseName << endl;
+    if (course.coursePrerequisites.empty()) {
+        cout << "------------------------" << endl;
+        cout << endl;
+        return;
     }
-    std::cout << std::endl;
+    cout << "Course Prerequisites: \n";
+    for (const auto& prereq : course.coursePrerequisites) {
+        cout << " - " << prereq << "\n";
+    }
+    cout << "------------------------" << endl;
+    cout << endl;
 };
 
-std::string LTrimString(const std::string& str) {
+string LTrimString(const string& str) {
     size_t start = str.find_first_not_of(" \t\n\r\f\v");
-    return (start == std::string::npos) ? "" : str.substr(start);
+    return (start == string::npos) ? "" : str.substr(start);
 }
 
-std::string RTrimString(const std::string& str) {
+string RTrimString(const string& str) {
     size_t end = str.find_last_not_of(" \t\n\r\f\v");
-    return (end == std::string::npos) ? "" : str.substr(0, end + 1);
+    return (end == string::npos) ? "" : str.substr(0, end + 1);
 }
 
-std::string TrimString(const std::string& str) {
+string TrimString(const string& str) {
     return LTrimString(RTrimString(str));
 }
 
-void ReadFile(const std::string& filename, BinarySearchTree& tree) {
-    std::cout << "Opening file " << filename << std::endl;
+bool IsInteger(const string& str) {
+    if (str.empty()) {
+        return false;
+    }
+
+    for (char ch : str) {
+        if (!isdigit(ch)) { 
+            return false; 
+        }
+    }
+    return true;
+};
+
+void ReadFile(const string& filename, BinarySearchTree& tree) {
+    cout << "Opening file " << filename << endl;
 
     // return if error on open
-    std::ifstream file(filename);
+    ifstream file(filename);
     if (!file.is_open()) {
-        std::cout << "Could not open file" << std::endl;
+        cout << "Could not open file" << endl;
         return;
     }
 
-    std::cout << "File open. Reading and storing data..." << std::endl;
+    cout << "File open. Reading and storing data..." << endl;
     
-    std::string rawInput = "";
+    string rawInput = "";
 
     try {
-        while (std::getline(file, rawInput)) {
+        // while there are lines to read, read them
+        while (getline(file, rawInput)) {
             
-            std::string current = "";
-            int field = 0;
+            // string to hold the current field being processed
+            string current = "";
             /* field indicators explaination:
              * 0 is for the courseId, 
              * 1 is for the name, 
             * 2+ are for prerequisites
             */
+            int field = 0;
 
             COURSE newCourse;
 
+            // parse the line per character
             for (char ch : rawInput) {
+                // until there is a comma, which means the current field is done
                 if (ch == ',') {
                     current = TrimString(current);
                     if (field == 0) {
+                        // add courseId
                         newCourse.courseId = current;
                     } else if (field == 1) {
+                        // add courseName
                         newCourse.courseName = current;
                     } else if (field > 1) {
+                        // add prerequisites if they exist
                         COURSE searchOutput = tree.Search(current);
                         if (!searchOutput.courseId.empty()) {
                             newCourse.coursePrerequisites.push_back(current);
+
                         } else {
                             PENDING_PREREQUISITE pendingPrereq;
                             pendingPrereq.courseId = newCourse.courseId;
@@ -264,15 +293,20 @@ void ReadFile(const std::string& filename, BinarySearchTree& tree) {
                             pendingPrerequisites.push_back(pendingPrereq);
                         }
                     }
+                    // reset current for next field
                     current = "";
+                    // increment field indicator
                     field++;
                 } else {
+                    // build current field string
                     current += ch;
                 }
             }
 
+            // process the last field after the final comma
             if (!current.empty()) {
                 current = TrimString(current);
+                // process the last field after the final comma
                 if (field == 1) {
                     newCourse.courseName = current;
                 } else if (field > 1) {
@@ -286,31 +320,30 @@ void ReadFile(const std::string& filename, BinarySearchTree& tree) {
                         pendingPrerequisites.push_back(pendingPrereq);
                     }
                 }
+                // reset current for next lineq
                 current = "";
                 tree.SetBstSize(tree.GetBstSize() + 1);
             }
             
             tree.InsertNode(newCourse);
-            std::cout << "------New Course: ------" << std::endl;
-            DisplayCourse(newCourse);
-            std::cout << "------------------------" << std::endl;
         }
 
         if (file.eof()) {
-            std::cout << "End of file reached." << std::endl;
+            cout << "End of file reached." << endl;
             
         } else {
-            std::cout << "Input failure before reaching end of file." << std::endl;
+            cout << "Input failure before reaching end of file." << endl;
         }
 
+        // validate prerequisites after all courses have been added
         tree.PreOrderValidationAll();
 
-        std::cout << tree.GetBstSize() << " courses were added successfully!" << std::endl;
-        std::cout << "Closing file: " << filename << std::endl; 
+        cout << tree.GetBstSize() << " courses were added successfully!" << endl;
+        cout << "Closing file: " << filename << endl; 
         file.close();
         return;
-    } catch (const std::exception& e) {
-        std::cout << "Error reading file " << filename << ": " << e.what() << std::endl;
+    } catch (const exception& e) {
+        cout << "Error reading file " << filename << ": " << e.what() << endl;
     }
 };
 
@@ -318,19 +351,25 @@ void MainMenu() {
     BinarySearchTree courseCatalog;
     int choice = 0;
 
-    std::cout << "Press Enter to open the menu...";
-    std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+    cout << "Press Enter to open the menu...";
+    cin.ignore(numeric_limits<streamsize>::max(), '\n');
 
     do {
-        std::cout << "MAIN MENU" << std::endl;
-        std::cout << "'1' to read the file." << std::endl;
-        std::cout << "'2' to print the entire course catalog." << std::endl;
-        std::cout << "'3' to search for and print a specific course." << std::endl;
-        std::cout << "'4' to search for and remove a specific course." << std::endl;
-        std::cout << "'0' to exit." << std::endl;
-        std::cout << "User choice: ";
-        std::cin >> choice;
-        std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+        cout << "MAIN MENU" << endl;
+        cout << "'1' to read the file: " << INPUT_FILE << "." << endl;
+        cout << "'2' to print the entire course catalog." << endl;
+        cout << "'3' to search for and print a specific course." << endl;
+        cout << "'4' to search for and remove a specific course." << endl;
+        cout << "'0' to exit." << endl;
+        
+        string choiceLine;
+        cout << "User choice: ";
+        getline(cin , choiceLine);
+        if (IsInteger(choiceLine)) {
+            choice = stoi(choiceLine);
+        } else {
+            choice = -1; // invalid choice
+        }
 
         switch (choice) {
             case 1:
@@ -339,7 +378,7 @@ void MainMenu() {
 
             case 2:
                 if (courseCatalog.GetBstSize() < 1) {
-                    std::cout << "No courses currently in the catalog" << std::endl;
+                    cout << "No courses currently in the catalog" << endl;
                 } else {
                     courseCatalog.InOrderPrintAll();
                 }
@@ -347,42 +386,47 @@ void MainMenu() {
             
             case 3:
                 if (courseCatalog.GetBstSize() < 1) {
-                    std::cout << "No courses currently in the catalog" << std::endl;
+                    cout << "No courses currently in the catalog" << endl;
                 } else {
-                    std::string searchTerm;
-                    std::cout << "Search by course name or ID: ";
-                    std::getline(std::cin, searchTerm);
+                    string searchTerm;
+                    cout << "Search by course ID: ";
+                    getline(cin, searchTerm);
                     COURSE searchResult = courseCatalog.Search(searchTerm);
                     if (searchResult.courseId.empty()) {
-                        std::cout << "No results found for: " << searchTerm << std::endl;
+                        cout << "No results found for: " << searchTerm << endl;
                     } else {
                         DisplayCourse(searchResult);
                     }
                 }
-                break;
+                break;   
 
             case 4:
                 if (courseCatalog.GetBstSize() < 1) {
-                    std::cout << "No courses currently in the catalog" << std::endl;
+                    cout << "No courses currently in the catalog" << endl;
                 } else {
-                    std::string removeTerm;
-                    std::cout << "Remove by course name or ID: ";
-                    std::getline(std::cin, removeTerm);
+                    string removeTerm;
+                    cout << "Remove by course ID: ";
+                    getline(cin, removeTerm);
                     COURSE removeResult = courseCatalog.Search(removeTerm);
                     if (removeResult.courseId.empty()) {
-                        std::cout << "No results found for: " << removeTerm << std::endl;
+                        cout << "No results found for: " << removeTerm << endl;
                     } else {
                         courseCatalog.Remove(removeResult.courseId);
-                        std::cout << "Course " << removeTerm << " removed." << std::endl;
+                        cout << "Course " << removeTerm << " removed." << endl;
                     }
                 }
                 break;
 
-            
+            default:
+                if (choice != 0) {
+                    cout << "Invalid entry. Please try again." << endl;
+                }
+                break;
+     
         }
     } while (choice != 0);
 
-    std::cout << "exiting..." << std::endl;
+    cout << "exiting..." << endl;
 };
 
 int main() {
