@@ -230,14 +230,12 @@ void ReadFile(const std::string& filename, BinarySearchTree& tree) {
     }
 
     std::cout << "File open. Reading and storing data..." << std::endl;
-//     SET rawInput to empty text
-    std::string rawInput;
-
     
+    std::string rawInput = "";
+
     try {
         while (std::getline(file, rawInput)) {
-            std::cin >> rawInput;
-
+            
             std::string current = "";
             int field = 0;
             /* field indicators explaination:
@@ -293,6 +291,9 @@ void ReadFile(const std::string& filename, BinarySearchTree& tree) {
             }
             
             tree.InsertNode(newCourse);
+            std::cout << "------New Course: ------" << std::endl;
+            DisplayCourse(newCourse);
+            std::cout << "------------------------" << std::endl;
         }
 
         if (file.eof()) {
