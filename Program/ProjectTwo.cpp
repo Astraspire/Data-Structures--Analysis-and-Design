@@ -25,12 +25,11 @@ struct NODE {
 
 // FUNCTION PROTOTYPES are:
 void DisplayCourse(const COURSE& course);
-size_t GetBstSize(const BinarySearchTree& tree);
 std::string LTrimString(const std::string& s);
 std::string RTrimString(const std::string& s);
 std::string TrimString(const std::string& s);
-void ReadFile(const std::string& fileName, BinarySearchTree& courseCatalog);
 void MainMenu();
+
 // GLOBAL VARIABLES are:
 std::vector<PENDING_PREREQUISITE> pendingPrerequisites; 
 
@@ -68,8 +67,10 @@ class BinarySearchTree {
             }
         }
 
-        NODE* RemoveNode(NODE* node, const std::string& courseId) {
-            if (node == nullptr) return;
+        void RemoveNode(NODE* node, const std::string& courseId) {
+            if (node == nullptr) {
+                return;
+            }
             if (courseId < node->course.courseId) {
                 RemoveNode(node->left, courseId);
             } else if (courseId > node->course.courseId) {
@@ -169,7 +170,7 @@ class BinarySearchTree {
         }
 
         void Remove(const std::string& courseId) {
-            root = RemoveNode(root, courseId);
+            RemoveNode(root, courseId);
         }
 
         COURSE Search(const std::string& courseId) {
@@ -382,3 +383,8 @@ void MainMenu() {
 
     std::cout << "exiting..." << std::endl;
 };
+
+int main() {
+    MainMenu();
+    return 0;
+}
