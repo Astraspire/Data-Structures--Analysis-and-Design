@@ -1,0 +1,368 @@
+ABCU - Hash Table Implementation Pseudocode
+Pseudocode for CS300 Milestone Two - Danny Fetter
+
+DATA:
+  COURSE is a structure with:
+    courseId (text)
+    name (text)
+    coursePrerequisites (list of text)
+
+  NODE is a structure with:
+    course (COURSE)
+    next (NODE or null)
+
+  PENDING PREREQUISITE is a structure with:
+    courseId (text)
+    missingPrereqId (text)
+
+  LINKED LIST is a structure with:
+    head (NODE or null)
+    tail (NODE or null)
+    listSize (number)
+
+  HASH TABLE is a structure with:
+    buckets (array of pointer NODEs)
+    tableSize (number)
+    size (number)
+
+  GLOBAL CONSTANTS are:
+    DEFAULT_SIZE is 8
+    PRIME_NUMBER is 29
+    INPUT_FILE is the text "ABCU-CourseData.txt"
+
+  VARIABLES are:
+    pendingPrerequisites is a list of PENDING PREREQUISITE
+    courseCatalog is a HashTable of COURSE
+
+CONSTRUCTORS:
+  DEFAULT CONSTRUCTOR LinkedList()
+    set head to null
+    set tail to null
+    set listSize to 0
+  END CONSTRUCTOR
+
+  DESTRUCTOR ~LinkedList ()
+    set current to head
+
+    WHILE current is not null
+      set temp to current
+      set current to current.next
+      free temp from memory
+    END WHILE
+  END DESTRUCTOR
+  
+  DEFAULT CONSTRUCTOR HashTable()
+    set size to 0
+    set tableSize to DEFAULT_SIZE
+    resize buckets to have tableSize elements
+  END CONSTRUCTOR
+
+  CONSTRUCTOR HashTable(bucketCount)
+    set size to 0
+    set tableSize to bucketCount
+    resize buckets to have tableSize elements
+  END CONSTRUCTOR
+
+  DESTRUCTOR ~HashTable()
+    clear all lists in buckets
+    set size to 0
+  END DESTRUCTOR
+
+FUNCTIONS:
+  FUNCTION hash(key)
+    set hashedKey to (key multiplied by PRIME_NUMBER) modulo tableSize
+    IF hashedKey is less than 0
+      add tableSize to hashedKey
+    END IF
+    RETURN hashedKey
+  END FUNCTION
+
+  FUNCTION LTrimString(s)
+    WHILE the first character of s is a space character
+      remove the first character from s
+    END WHILE
+    RETURN s
+  END FUNCTION
+
+  FUNCTION RTrimString(s)
+    WHILE the last character of s is a space character
+      remove the last character from s
+    END WHILE
+    RETURN s
+  END FUNCTION
+
+  FUNCTION TrimString(s)
+    set s to RTrimString(s)
+    set s to LTrimString(s)
+    RETURN s
+  END FUNCTION
+
+  FUNCTION AddNewCourse(courseCatalog, newCourse)
+    convert newCourse.courseId from text to integer
+    set key to hash(the converted value)
+
+    CREATE a new NODE named newNode
+    set newNode.course to newCourse
+    set newNode.next to null
+
+    IF courseCatalog.buckets[key].head is null
+      set courseCatalog.buckets[key].head to newNode
+      set courseCatalog.buckets[key].tail to newNode
+    ELSE
+      set courseCatalog.buckets[key].tail.next to newNode
+      set courseCatalog.buckets[key].tail to newNode
+    END IF
+
+    increase courseCatalog.buckets[key].listSize by 1
+    increase courseCatalog.size by 1
+  END FUNCTION
+
+  FUNCTION SecondPassValidation(courseCatalog)
+    IF courseCatalog.size is less than or equal to 0
+      DISPLAY "Second pass validation failed, import a course catalog first"
+      RETURN
+    ELSE
+      FOR EACH pendingPrereq in pendingPrerequisites
+        set searchOutput to output of Search(courseCatalog, pendingPrereq.missingPrereqId)
+        IF searchOutput is not empty
+          add pendingPrereq.missingPrereqId to searchOutput.coursePrerequisites
+          delete pendingPrereq from pendingPrerequisites
+        ELSE
+          DISPLAY "Warning: Course " and pendingPrereq.courseId and " is missing prerequisite " and pendingPrereq.missingPrereqId
+        END IF
+      END FOR
+    END IF
+  END FUNCTION
+
+  FUNCTION PrintCatalog(courseCatalog, courseToPrint)
+    IF courseToPrint is empty
+      WHILE size is greater than 0
+        FOR EACH NODE in courseCatalog.buckets
+          set current to course head
+
+          IF current is null
+            set current to current.next
+            RETURN
+          END IF
+
+          WHILE current is not null
+            DISPLAY current.course.courseId, ": ", current.course.name
+              IF current.course.coursePrerequisites is not empty
+                DISPLAY current.course.coursePrerequisites
+              END IF
+            set current to current.next
+            decrease size by 1
+          END WHILE
+        END FOR
+      END WHILE
+    ELSE
+      set current to courseToPrint
+      DISPLAY current.courseId, ": ", current.name
+      IF current.coursePrerequisites is not empty
+        DISPLAY current.coursePrerequisites
+      END IF
+    END IF
+  END FUNCTION
+
+  FUNCTION SearchCatalog(courseCatalog, searchTerm)
+    IF size of courseCatalog is less than of equal to 0
+      DISPLAY "Search failed, import a course catalog first"
+      RETURN
+    END IF
+
+    convert searchTerm from text to integer
+    set searchKey to hash(the converted value)
+
+    IF searchKey is equal to bucket[searchKey]
+
+      IF head is not null AND searchTerm equals head.course.courseId
+        PrintCatalog(courseCatalog, head.course)
+        RETURN head.course
+      END IF
+
+      set current to bucket[searchKey].head
+
+      WHILE current is not null
+        IF current.course.courseId equals searchTerm
+          PrintCatalog(courseCatalog, current.course)
+          RETURN current.course
+        END IF
+        set current to current.next
+      END WHILE
+
+      CREATE a new COURSE named noResult
+      set noResult.courseId to empty text
+      set noResult.name to empty text
+      set noResult.coursePrerequisites to empty text
+
+      RETURN noResult
+  END FUNCTION
+
+  FUNCTION SearchAndPrintCatalog(courseCatalog, searchTerm)
+    set resultCourse to result of SearchCatalog(courseCatalog, searchTerm)
+
+    IF resultCourse.courseId is empty text
+      DISPLAY "No results found for: " and searchTerm    
+    END IF
+
+    DISPLAY resultCourseourse.courseId and ": " and resultCourseourse.name
+    IF the size of resultCoursecourse.coursePrerequisites is greater than 0
+      DISPLAY "  Prerequisites: "
+      FOR EACH prereqId in resultCourse.coursePrerequisites
+        DISPLAY new line and prereqId
+      END FOR
+    END IF
+  END FUNCTION
+
+  FUNCTION ReadFile(fileName, courseCatalog)
+    DISPLAY "Opening file " and fileName
+    open file with name fileName for reading
+    IF the file is not open
+      DISPLAY "Could not open file"
+      RETURN 1
+    END IF
+
+    DISPLAY "File open. Reading and storing data..."
+
+    SET rawInput to empty text
+
+    TRY
+        WHILE there is another line to read from the file
+          read the next line into rawInput
+
+          SET current to empty text
+          SET field to 0 
+          * field indicators explaination:
+          * 0 is for the courseId, 
+          * 1 is for the name, 
+          * 2+ are for prerequisites
+          *
+          CREATE a new COURSE named newCourse
+
+          FOR EACH character ch in rawInput
+            IF ch is a comma
+              set current to TrimString(current)
+              IF field equals 0
+                set newCourse.courseId to current
+              ELSE IF field equals 1
+                set newCourse.name to current
+              ELSE IF field is greater than 1
+                searchOutput is a COURSE
+                set searchOutput to output of SearchCatalog(courseCatalog, current)
+                IF searchOutput is not empty
+                  add current to newCourse.coursePrerequisites
+                ELSE
+                  CREATE a new PENDING PREREQUISITE named pendingPrereq
+                  set pendingPrereq.courseId to newCourse.courseId
+                  set pendingPrereq.missingPrereqId to current
+                  add pendingPrereq to pendingPrerequisites
+                END IF
+              set current to empty text
+              increase field by 1
+            ELSE
+              add ch to the end of current
+            END IF
+          END FOR
+
+          IF the length of current is at least 1
+            set current to TrimString(current)
+            IF field equals 1
+              set newCourse.name to current
+            ELSE IF field is greater than 1
+              searchOutput is a COURSE
+              set searchOutput to output of Search(courseCatalog, current)
+              IF searchOutput is not empty
+                add current to newCourse.coursePrerequisites
+              ELSE
+                CREATE a new PENDING PREREQUISITE named pendingPrereq
+                set pendingPrereq.courseId to newCourse.courseId
+                set pendingPrereq.missingPrereqId to current
+                add pendingPrereq to pendingPrerequisites
+              END IF
+            END IF
+            set current to empty text
+            increase field by 1
+          END IF
+
+          AddNewCourse(courseCatalog, newCourse)
+        END WHILE
+
+        IF the file did not finish at the end marker
+          DISPLAY "Input failure before reaching end of file."
+        END IF
+
+        call SecondPassValidation(courseCatalog)
+        DISPLAY the size of courseCatalog and " courses were added successfully!"
+        DISPLAY "Closing file: " and fileName
+
+        close the file
+
+        DISPLAY "File: " and fileName
+        DISPLAY "Import complete."
+
+        RETURN 0
+      CATCH exception
+        DISPLAY "Error reading file ", csvPath
+      END TRY
+
+    IF the file did not finish at the end marker
+      DISPLAY "Input failure before reaching end of file."
+    END IF
+    RETURN 0
+  END FUNCTION
+
+  FUNCTION MainMenu()
+    SET choice to 0
+
+    DISPLAY "Press Enter to open the menu..."
+    wait for the user to press Enter
+
+    DO
+      DISPLAY "MAIN MENU"
+      DISPLAY "'1' to read the file."
+      DISPLAY "'2' to print the entire course catalog."
+      DISPLAY "'3' to search for and print a specific course."
+      DISPLAY "'0' to exit."
+      DISPLAY "User choice: "
+      read choice
+      clear any leftover input from that number entry
+
+      IF choice equals 1
+        call ReadFile(INPUT_FILE, courseCatalog)
+
+      ELSE IF choice equals 2
+        IF the size of courseCatalog is less than 1
+          DISPLAY "No courses currently in the catalog"
+        ELSE
+          call PrintCatalog(courseCatalog)
+        END IF
+
+      ELSE IF choice equals 3
+        IF the size of courseCatalog is less than 1
+          DISPLAY "No courses currently in the catalog"
+        ELSE
+          SET searchTerm to empty text
+          DISPLAY "Search by course name or ID: "
+          read a full line into searchTerm
+          call SearchAndPrintCatalog(courseCatalog, searchTerm)
+          DISPLAY "Press Enter to finish and return to main menu..."
+          wait for the user to press Enter
+        END IF
+
+      ELSE IF choice equals 0
+        (do nothing here)
+
+      ELSE
+        DISPLAY "Invalid entry!"
+        DISPLAY "Press Enter to return to main menu..."
+        wait for the user to press Enter
+      END IF
+
+    WHILE choice is not equal to 0
+
+    DISPLAY "exiting..."
+  END FUNCTION
+
+MAIN PROGRAM
+  call MainMenu()
+  END PROGRAM
