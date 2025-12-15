@@ -135,26 +135,24 @@ class BinarySearchTree {
                 return; 
             };
             if (!pendingPrerequisites.empty()) {
-                for (size_t i = 0; i < pendingPrerequisites.size()) {
+                for (size_t i = 0; i < pendingPrerequisites.size(); ) {
                     PENDING_PREREQUISITE &currentPendingPrereq = pendingPrerequisites[i];
 
                     COURSE searchOutput = Search(currentPendingPrereq.missingPrereqId);
                     if (searchOutput.courseId.empty()) {
-                        cout << "Validation Error: Course " << node->course.courseId 
-                             << " has missing prerequisite " << currentPendingPrereq.missingPrereqId << endl;
-                        i++; // did not process this pending prerequisite, move to next
+                        // do not process this pending prerequisite, move to next
+                        i++;
                     } else {
                         string courseToUpdate = currentPendingPrereq.courseId;
                         searchOutput.coursePrerequisites.push_back(currentPendingPrereq.missingPrereqId);
                         Remove(courseToUpdate);
                         InsertNode(searchOutput);
-                        // delete current pendingPrereq from pendingPrerequisites
+                        // delete current pendingPrereq from pendingPrerequisites vector
                         pendingPrerequisites.erase(pendingPrerequisites.begin() + i);
                         // do not increment i, as the next item has shifted into current position
                     }
                 }
             }
-            
             PreOrderValidation(node->left);
             PreOrderValidation(node->right);
         }
