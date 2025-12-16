@@ -10,7 +10,7 @@ Overall, this project was a valuable learning experience that enhanced my skills
 
 - README.md
 
-*Program Folder:*
+*Program folder:*
 
 - "CS 300 ABCU_Advising_Program_Input.csv" (input file containing course data)
 - "ProjectTwo.cpp" (source code of the program)
